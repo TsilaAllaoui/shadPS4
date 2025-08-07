@@ -68,31 +68,31 @@ void SigactionHandler(int signum, siginfo_t* inf, ucontext_t* raw_context) {
 }
 #else
 void ExceptionHandler(void* arg1, void* arg2, void* arg3, PCONTEXT context) {
-    const char* thrName = (char*)arg1;
-    LOG_INFO(Lib_Kernel, "Exception raised successfully on thread '{}'", thrName);
-    const auto handler = Handlers[POSIX_SIGUSR1];
-    if (handler) {
-        auto ctx = Ucontext{};
-        ctx.uc_mcontext.mc_r8 = context->R8;
-        ctx.uc_mcontext.mc_r9 = context->R9;
-        ctx.uc_mcontext.mc_r10 = context->R10;
-        ctx.uc_mcontext.mc_r11 = context->R11;
-        ctx.uc_mcontext.mc_r12 = context->R12;
-        ctx.uc_mcontext.mc_r13 = context->R13;
-        ctx.uc_mcontext.mc_r14 = context->R14;
-        ctx.uc_mcontext.mc_r15 = context->R15;
-        ctx.uc_mcontext.mc_rdi = context->Rdi;
-        ctx.uc_mcontext.mc_rsi = context->Rsi;
-        ctx.uc_mcontext.mc_rbp = context->Rbp;
-        ctx.uc_mcontext.mc_rbx = context->Rbx;
-        ctx.uc_mcontext.mc_rdx = context->Rdx;
-        ctx.uc_mcontext.mc_rax = context->Rax;
-        ctx.uc_mcontext.mc_rcx = context->Rcx;
-        ctx.uc_mcontext.mc_rsp = context->Rsp;
-        ctx.uc_mcontext.mc_fs = context->SegFs;
-        ctx.uc_mcontext.mc_gs = context->SegGs;
-        handler(POSIX_SIGUSR1, &ctx);
-    }
+    // const char* thrName = (char*)arg1;
+    // LOG_INFO(Lib_Kernel, "Exception raised successfully on thread '{}'", thrName);
+    // const auto handler = Handlers[POSIX_SIGUSR1];
+    // if (handler) {
+    //     auto ctx = Ucontext{};
+    //     ctx.uc_mcontext.mc_r8 = context->R8;
+    //     ctx.uc_mcontext.mc_r9 = context->R9;
+    //     ctx.uc_mcontext.mc_r10 = context->R10;
+    //     ctx.uc_mcontext.mc_r11 = context->R11;
+    //     ctx.uc_mcontext.mc_r12 = context->R12;
+    //     ctx.uc_mcontext.mc_r13 = context->R13;
+    //     ctx.uc_mcontext.mc_r14 = context->R14;
+    //     ctx.uc_mcontext.mc_r15 = context->R15;
+    //     ctx.uc_mcontext.mc_rdi = context->Rdi;
+    //     ctx.uc_mcontext.mc_rsi = context->Rsi;
+    //     ctx.uc_mcontext.mc_rbp = context->Rbp;
+    //     ctx.uc_mcontext.mc_rbx = context->Rbx;
+    //     ctx.uc_mcontext.mc_rdx = context->Rdx;
+    //     ctx.uc_mcontext.mc_rax = context->Rax;
+    //     ctx.uc_mcontext.mc_rcx = context->Rcx;
+    //     ctx.uc_mcontext.mc_rsp = context->Rsp;
+    //     ctx.uc_mcontext.mc_fs = context->SegFs;
+    //     ctx.uc_mcontext.mc_gs = context->SegGs;
+    //     handler(POSIX_SIGUSR1, &ctx);
+    // }
 }
 #endif
 
@@ -113,55 +113,55 @@ int PS4_SYSV_ABI sceKernelInstallExceptionHandler(s32 signum, SceKernelException
 }
 
 int PS4_SYSV_ABI sceKernelRemoveExceptionHandler(s32 signum) {
-    if (signum != POSIX_SIGUSR1) {
-        LOG_ERROR(Lib_Kernel, "Installing non-supported exception handler for signal {}", signum);
-        return 0;
-    }
-    ASSERT_MSG(Handlers[POSIX_SIGUSR1], "Invalid parameters");
-    Handlers[POSIX_SIGUSR1] = nullptr;
-#ifndef _WIN64
-    struct sigaction act = {};
-    act.sa_flags = SA_SIGINFO | SA_RESTART;
-    act.sa_sigaction = nullptr;
-    sigaction(SIGUSR2, &act, nullptr);
-#endif
+//     if (signum != POSIX_SIGUSR1) {
+//         LOG_ERROR(Lib_Kernel, "Installing non-supported exception handler for signal {}", signum);
+//         return 0;
+//     }
+//     ASSERT_MSG(Handlers[POSIX_SIGUSR1], "Invalid parameters");
+//     Handlers[POSIX_SIGUSR1] = nullptr;
+// #ifndef _WIN64
+//     struct sigaction act = {};
+//     act.sa_flags = SA_SIGINFO | SA_RESTART;
+//     act.sa_sigaction = nullptr;
+//     sigaction(SIGUSR2, &act, nullptr);
+// #endif
     return 0;
 }
 
 int PS4_SYSV_ABI sceKernelRaiseException(PthreadT thread, int signum) {
-    LOG_WARNING(Lib_Kernel, "Raising exception on thread '{}'", thread->name);
-    ASSERT_MSG(signum == POSIX_SIGUSR1, "Attempting to raise non user defined signal!");
-#ifndef _WIN64
-    const auto pthr = reinterpret_cast<pthread_t>(thread->native_thr.GetHandle());
-    const auto ret = pthread_kill(pthr, SIGUSR2);
-    if (ret != 0) {
-        LOG_ERROR(Kernel, "Failed to send exception signal to thread '{}': {}", thread->name,
-                  strerror(ret));
-    }
-#else
-    USER_APC_OPTION option;
-    option.UserApcFlags = QueueUserApcFlagsSpecialUserApc;
+//     LOG_WARNING(Lib_Kernel, "Raising exception on thread '{}'", thread->name);
+//     ASSERT_MSG(signum == POSIX_SIGUSR1, "Attempting to raise non user defined signal!");
+// #ifndef _WIN64
+//     const auto pthr = reinterpret_cast<pthread_t>(thread->native_thr.GetHandle());
+//     const auto ret = pthread_kill(pthr, SIGUSR2);
+//     if (ret != 0) {
+//         LOG_ERROR(Kernel, "Failed to send exception signal to thread '{}': {}", thread->name,
+//                   strerror(ret));
+//     }
+// #else
+//     USER_APC_OPTION option;
+//     option.UserApcFlags = QueueUserApcFlagsSpecialUserApc;
 
-    u64 res = NtQueueApcThreadEx(reinterpret_cast<HANDLE>(thread->native_thr.GetHandle()), option,
-                                 ExceptionHandler, (void*)thread->name.c_str(), nullptr, nullptr);
-    ASSERT(res == 0);
-#endif
+//     u64 res = NtQueueApcThreadEx(reinterpret_cast<HANDLE>(thread->native_thr.GetHandle()), option,
+//                                  ExceptionHandler, (void*)thread->name.c_str(), nullptr, nullptr);
+//     ASSERT(res == 0);
+// #endif
     return 0;
 }
 
 s32 PS4_SYSV_ABI sceKernelDebugRaiseException(s32 error, s64 unk) {
-    if (unk != 0) {
-        return ORBIS_KERNEL_ERROR_EINVAL;
-    }
-    UNREACHABLE_MSG("error {:#x}", error);
+    // if (unk != 0) {
+    //     return ORBIS_KERNEL_ERROR_EINVAL;
+    // }
+    // UNREACHABLE_MSG("error {:#x}", error);
     return 0;
 }
 
 s32 PS4_SYSV_ABI sceKernelDebugRaiseExceptionOnReleaseMode(s32 error, s64 unk) {
-    if (unk != 0) {
-        return ORBIS_KERNEL_ERROR_EINVAL;
-    }
-    UNREACHABLE_MSG("error {:#x}", error);
+    // if (unk != 0) {
+    //     return ORBIS_KERNEL_ERROR_EINVAL;
+    // }
+    // UNREACHABLE_MSG("error {:#x}", error);
     return 0;
 }
 
